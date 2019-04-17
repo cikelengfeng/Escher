@@ -15,7 +15,7 @@
 
 @interface MetalViewController () <EHDeviceDelegate, EHTicker>
 
-@property (nonatomic, weak) CAMetalLayer *metalLayer;
+@property (nonatomic, strong) CAMetalLayer *metalLayer;
 @property (nonatomic, strong) EHDevice *device;
 @property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
 
@@ -58,7 +58,7 @@
     NSError *error;
     _pipelineState = [_device.device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
     
-    _animator = [[EHAnimator alloc] initWithDuration:0.5 ticker:self];
+    _animator = [[EHAnimator alloc] initWithDuration:5 ticker:self];
     _interpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(0.5)];
 }
 
@@ -88,7 +88,18 @@
                 break;
         }
     }];
+    [self.animator setListener:^{
+        NSLog(@"frameindex: %ld", weakSelf.animator.frameIndex);
+//        if (weakSelf.animator.frameIndex % 11 == 0) {
+//            if (weakSelf.animator.state == EHAnimatorStateForwarding) {
+//                [weakSelf.animator setOffsetBy:0.2];
+//            } else if (weakSelf.animator.state == EHAnimatorStateReversing) {
+//                [weakSelf.animator setOffsetBy:-0.2];
+//            }
+//        }
+    }];
     [self.animator start];
+    [weakSelf.animator setOffsetTo:2];
 }
 
 - (void)vsync:(id<MTLCommandQueue>)commandQueue {
@@ -107,9 +118,9 @@
     renderPassDesc.colorAttachments[0].clearColor = MTLClearColorMake(0, 104.f/255.f, 55.f/255.f, 1);
     
     const int vertexCount = 9;
-    float vertexData[vertexCount] =    {0.0 + [self.interpolator evaluate:self.animator].floatValue, 1.0, 0.0,
-                                        -1.0 + [self.interpolator evaluate:self.animator].floatValue, -1.0, 0.0,
-                                        1.0 + [self.interpolator evaluate:self.animator].floatValue, -1.0, 0.0};
+    float vertexData[vertexCount] =    {0.0 + [self.interpolator evaluate:self.animator].floatValue, 0.6, 0.0,
+                                        -1.0 + [self.interpolator evaluate:self.animator].floatValue, -0.6, 0.0,
+                                        1.0 + [self.interpolator evaluate:self.animator].floatValue, -0.6, 0.0};
     id<MTLBuffer> buffer = [self.device.device newBufferWithBytes:vertexData length:sizeof(double) * vertexCount options:0];
     
     

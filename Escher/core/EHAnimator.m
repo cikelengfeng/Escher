@@ -12,6 +12,7 @@
 
 @property (nonatomic, assign) NSUInteger frameIndex;
 @property (nonatomic, assign) NSUInteger frameCount;
+@property (nonatomic, assign, readonly) NSUInteger maxFrameIndex;
 @property (nonatomic, assign) EHAnimatorState state;
 @property (nonatomic, assign) NSTimeInterval duration;
 @property (nonatomic, assign) NSUInteger frameRate;//default is 60
@@ -21,6 +22,8 @@
 @end
 
 @implementation EHAnimator
+
+@dynamic maxFrameIndex;
 
 - (instancetype)initWithDuration:(NSTimeInterval)duration ticker:(id<EHTicker>)ticker
 {
@@ -40,21 +43,21 @@
 
 - (void)onVsync
 {
-    if (self.frameIndex == self.frameCount - 1 && self.state == EHAnimatorStateForwarding) {
-        self.frameIndex = self.frameCount;
+    if (self.frameIndex == self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        [self setFrameIndexAndNotifyListener:self.maxFrameIndex];
         self.state = EHAnimatorStateCompleted;
         return;
     }
-    if (self.frameIndex < self.frameCount - 1 && self.state == EHAnimatorStateForwarding) {
-        self.frameIndex += 1;
+    if (self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        [self setFrameIndexAndNotifyListener:self.frameIndex + 1];
         return;
     }
     if (self.frameIndex > 1 && self.state == EHAnimatorStateReversing) {
-        self.frameIndex -= 1;
+        [self setFrameIndexAndNotifyListener:self.frameIndex - 1];
         return;
     }
     if (self.frameIndex == 1 && self.state == EHAnimatorStateReversing) {
-        self.frameIndex = 0;
+        [self setFrameIndexAndNotifyListener:0];
         self.state = EHAnimatorStateInitial;
         return;
     }
@@ -74,28 +77,105 @@
         self.state = EHAnimatorStateForwarding;
         return;
     }
+    if (self.frameIndex > 0 && self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStatePaused) {
+        self.state = EHAnimatorStateForwarding;
+        return;
+    }
 }
 
 - (void)reset
 {
-    self.frameIndex = 0;
+    [self setFrameIndexAndNotifyListener:0];
     self.state = EHAnimatorStateInitial;
 }
 
 - (void)reverse
 {
-    if (self.frameIndex < self.frameCount - 1 && self.state == EHAnimatorStateForwarding) {
+    if (self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
         self.state = EHAnimatorStateReversing;
         return;
     }
-    if (self.frameIndex == self.frameCount - 1 && self.state == EHAnimatorStateForwarding) {
+    if (self.frameIndex == self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
         self.state = EHAnimatorStateReversing;
         return;
     }
-    if (self.frameIndex == self.frameCount && self.state == EHAnimatorStateCompleted) {
+    if (self.frameIndex == self.maxFrameIndex && self.state == EHAnimatorStateCompleted) {
         self.state = EHAnimatorStateReversing;
         return;
     }
+    if (self.frameIndex > 0 && self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStatePaused) {
+        self.state = EHAnimatorStateReversing;
+        return;
+    }
+}
+
+- (void)pause
+{
+    if (self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        self.state = EHAnimatorStatePaused;
+        return;
+    }
+    if (self.frameIndex == self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        self.state = EHAnimatorStatePaused;
+        return;
+    }
+    if (self.frameIndex > 1 && self.state == EHAnimatorStateReversing) {
+        self.state = EHAnimatorStatePaused;
+        return;
+    }
+    if (self.frameIndex == 1 && self.state == EHAnimatorStateReversing) {
+        self.state = EHAnimatorStatePaused;
+        return;
+    }
+}
+
+- (void)setOffsetIndex:(NSUInteger)newFrameIndex
+{
+    if (self.frameIndex < self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        self.frameIndex = newFrameIndex;
+        return;
+    }
+    if (self.frameIndex == self.maxFrameIndex - 1 && self.state == EHAnimatorStateForwarding) {
+        self.frameIndex = newFrameIndex;
+        return;
+    }
+    if (self.frameIndex > 1 && self.state == EHAnimatorStateReversing) {
+        self.frameIndex = newFrameIndex;
+        return;
+    }
+    if (self.frameIndex == 1 && self.state == EHAnimatorStateReversing) {
+        self.frameIndex = newFrameIndex;
+        return;
+    }
+    if (self.frameIndex > 0 && self.frameIndex < self.maxFrameIndex && self.state == EHAnimatorStatePaused) {
+        self.frameIndex = newFrameIndex;
+        return;
+    }
+}
+
+- (void)setOffsetTo:(NSTimeInterval)to
+{
+    if (to < 0) {
+        return;
+    }
+    if (to > self.duration) {
+        return;
+    }
+    NSUInteger newFrameIndex = to * self.frameRate;
+    newFrameIndex = MAX(MIN(self.maxFrameIndex - 1, newFrameIndex), 1);
+    [self setOffsetIndex:newFrameIndex];
+}
+
+- (void)setOffsetBy:(NSTimeInterval)by
+{
+    if (ABS(by) > self.duration) {
+        return;
+    }
+    NSInteger byIndex = by * self.frameRate;
+    byIndex = MAX((NSInteger)-self.frameIndex, byIndex);
+    NSUInteger newFrameIndex = self.frameIndex + byIndex;
+    newFrameIndex = MAX(MIN(self.maxFrameIndex - 1, newFrameIndex), 1);
+    [self setOffsetIndex:newFrameIndex];
 }
 
 - (void)setState:(EHAnimatorState)state
@@ -106,12 +186,17 @@
     }
 }
 
-- (void)setFrameIndex:(NSUInteger)frameIndex
+- (void)setFrameIndexAndNotifyListener:(NSUInteger)frameIndex
 {
-    _frameIndex = frameIndex;
+    self.frameIndex = frameIndex;
     if (self.listener) {
         self.listener();
     }
+}
+
+- (NSUInteger)maxFrameIndex
+{
+    return self.frameCount - 1;
 }
 
 @end

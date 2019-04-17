@@ -14,6 +14,7 @@ typedef NS_ENUM(NSUInteger, EHAnimatorState) {
     EHAnimatorStateReversing,
     EHAnimatorStateCompleted,
     EHAnimatorStateCancelled,
+    EHAnimatorStatePaused,
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,6 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)start;
 - (void)reverse;
 - (void)reset;
+- (void)pause;
+- (void)setOffsetTo:(NSTimeInterval)to;
+- (void)setOffsetBy:(NSTimeInterval)by;
 
 @end
 

@@ -11,19 +11,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol EHDeviceDelegate <NSObject>
+@protocol EHRenderEngineDelegate <NSObject>
 
 - (void)vsync:(id<MTLCommandQueue>)commandQueue;
 
 @end
 
-@interface EHDevice : NSObject
+@interface EHRenderEngine : NSObject
 
-//rgb
-@property (nonatomic, assign) UInt8 *buffer;
-@property (nonatomic, assign) int64_t bufferSize;
++ (instancetype)sharedInstance;
 
-@property (nonatomic, weak) id<EHDeviceDelegate> delegate;
+@property (nonatomic, weak) id<EHRenderEngineDelegate> delegate;
 
 @property (nonatomic, strong, readonly) id<MTLDevice> device;
 

@@ -7,20 +7,21 @@
 //
 
 #import "MetalViewController.h"
-#import "EHDevice.h"
+#import "EHRenderEngine.h"
 #import "EHAnimator.h"
 #import "EHInterpolator.h"
+#import "EHRenderObject.h"
+#import "EHImageRenderBox.h"
+#import <ImageIO/ImageIO.h>
 
 @import Metal;
 
-@interface MetalViewController () <EHDeviceDelegate, EHTicker>
+@interface MetalViewController () <EHRenderEngineDelegate, EHTicker>
 
 @property (nonatomic, strong) CAMetalLayer *metalLayer;
-@property (nonatomic, strong) EHDevice *device;
-@property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
 
-@property (nonatomic, strong) EHAnimator *animator;
-@property (nonatomic, strong) EHNumberInterpolator *interpolator;
+@property (nonatomic, strong) id<EHRenderObject> rootRenderObject;
+@property (nonatomic, strong) EHRenderContext *rootContext;
 
 @end
 
@@ -46,60 +47,38 @@
 }
 
 - (void)internalInit {
-    _device = [[EHDevice alloc] init];
-    _device.delegate = self;
-    id<MTLLibrary> defaultLibrary = [_device.device newDefaultLibrary];
-    id<MTLFunction> fragmentProgram = [defaultLibrary newFunctionWithName:@"basic_fragment"];
-    id<MTLFunction> vertexProgram = [defaultLibrary newFunctionWithName:@"basic_vertex"];
-    MTLRenderPipelineDescriptor *pipelineStateDesc = [MTLRenderPipelineDescriptor new];
-    pipelineStateDesc.vertexFunction = vertexProgram;
-    pipelineStateDesc.fragmentFunction = fragmentProgram;
-    pipelineStateDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-    NSError *error;
-    _pipelineState = [_device.device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
-    
-    _animator = [[EHAnimator alloc] initWithDuration:5 ticker:self];
-    _interpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(0.5)];
+    [EHRenderEngine sharedInstance].delegate = self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     CAMetalLayer *metalLayer = [CAMetalLayer new];
-    metalLayer.device = self.device.device;
+    metalLayer.device = [EHRenderEngine sharedInstance].device;
     metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
     metalLayer.framebufferOnly = YES;
     metalLayer.frame = self.view.layer.frame;
     [self.view.layer addSublayer:metalLayer];
     self.metalLayer = metalLayer;
     
-    [self.device start];
+    EHImageRenderBox *imageView = [[EHImageRenderBox alloc] initWithSize:[[EHLayoutSizeBox alloc] initWithWidth:CGRectGetWidth(metalLayer.bounds) height:CGRectGetHeight(metalLayer.bounds)]];
+    NSURL *url = [[NSBundle mainBundle] URLForResource:@"test" withExtension:@"jpg"];
+    CGImageSourceRef imageSource = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
+    if (!imageSource) {
+        return;
+    }
+    CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+    imageView.image = image;
+    CFRelease(imageSource);
+    CGImageRelease(image);
+    self.rootRenderObject = imageView;
     
-    __weak typeof(self) weakSelf = self;
-    [self.animator setStateChanged:^(EHAnimatorState state) {
-        switch (state) {
-            case EHAnimatorStateInitial:
-                [weakSelf.animator start];
-                break;
-            case EHAnimatorStateCompleted:
-                [weakSelf.animator reverse];
-                break;
-            default:
-                break;
-        }
-    }];
-    [self.animator setListener:^{
-        NSLog(@"frameindex: %ld", weakSelf.animator.frameIndex);
-//        if (weakSelf.animator.frameIndex % 11 == 0) {
-//            if (weakSelf.animator.state == EHAnimatorStateForwarding) {
-//                [weakSelf.animator setOffsetBy:0.2];
-//            } else if (weakSelf.animator.state == EHAnimatorStateReversing) {
-//                [weakSelf.animator setOffsetBy:-0.2];
-//            }
-//        }
-    }];
-    [self.animator start];
-    [weakSelf.animator setOffsetTo:2];
+    [[EHRenderEngine sharedInstance] start];
+}
+
+- (void)performRenderInContext:(EHRenderContext *)context
+{
+    [self.rootRenderObject renderInContext:context];
 }
 
 - (void)vsync:(id<MTLCommandQueue>)commandQueue {
@@ -112,27 +91,12 @@
     if (!drawable) {
         return;
     }
-    MTLRenderPassDescriptor *renderPassDesc = [MTLRenderPassDescriptor new];
-    renderPassDesc.colorAttachments[0].texture = drawable.texture;
-    renderPassDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDesc.colorAttachments[0].clearColor = MTLClearColorMake(0, 104.f/255.f, 55.f/255.f, 1);
     
-    const int vertexCount = 9;
-    float vertexData[vertexCount] =    {0.0 + [self.interpolator evaluate:self.animator].floatValue, 0.6, 0.0,
-                                        -1.0 + [self.interpolator evaluate:self.animator].floatValue, -0.6, 0.0,
-                                        1.0 + [self.interpolator evaluate:self.animator].floatValue, -0.6, 0.0};
-    id<MTLBuffer> buffer = [self.device.device newBufferWithBytes:vertexData length:sizeof(double) * vertexCount options:0];
-    
-    
-    id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-    id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDesc];
-    [renderEncoder setRenderPipelineState:self.pipelineState];
-    [renderEncoder setVertexBuffer:buffer offset:0 atIndex:0];
-    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3 instanceCount:1];
-    [renderEncoder endEncoding];
-    
-    [commandBuffer presentDrawable:drawable];
-    [commandBuffer commit];
+    if (!self.rootContext) {
+        self.rootContext = [[EHRenderContext alloc] initWithCommandQueue:commandQueue];
+    }
+    self.rootContext.canvas = drawable;
+    [self performRenderInContext:self.rootContext];
 }
 
 

@@ -6,10 +6,10 @@
 //  Copyright © 2019 DXLab. All rights reserved.
 //
 
-#import "EHDevice.h"
+#import "EHRenderEngine.h"
 @import QuartzCore;
 
-@interface EHDevice ()
+@interface EHRenderEngine ()
 
 @property (nonatomic, strong) id<MTLDevice> device;
 @property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
@@ -20,7 +20,18 @@
 
 @end
 
-@implementation EHDevice
+@implementation EHRenderEngine
+
+static EHRenderEngine *singleton;
+
++ (instancetype)sharedInstance
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        singleton = [[self alloc]init];
+    });
+    return singleton;
+}
 
 - (instancetype)init
 {

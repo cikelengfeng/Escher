@@ -8,6 +8,7 @@
 
 #ifndef EHRenderBoxInternal_h
 #define EHRenderBoxInternal_h
+#import "Geometry.h"
 
 @interface EHLayoutSizeBox ()
 
@@ -28,6 +29,9 @@
 @interface EHRenderBox ()
 
 @property (nonatomic, strong) EHLayoutSizeBox *size;
+@property (nonatomic, assign) EHSize pixelSize;
+@property (nonatomic, assign) BOOL dirty;
+@property (nonatomic, assign) EHRect dirtyRectInPixel;
 
 @end
 

@@ -8,14 +8,3 @@
 
 #import "Geometry.h"
 
-@implementation EHPoint
-
-@end
-
-@implementation EHRect
-
-@end
-
-@implementation EHMatrix3
-
-@end

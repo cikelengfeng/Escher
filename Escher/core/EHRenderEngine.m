@@ -7,6 +7,7 @@
 //
 
 #import "EHRenderEngine.h"
+@import UIKit;
 @import QuartzCore;
 
 @interface EHRenderEngine ()
@@ -17,6 +18,7 @@
 @property (nonatomic, strong) CADisplayLink *ticker;
 
 @property (nonatomic, assign) BOOL ready;
+@property (nonatomic, assign) double nativeScale;
 
 @end
 
@@ -41,22 +43,28 @@ static EHRenderEngine *singleton;
         
         _commandQueue = [_device newCommandQueue];
         
-        _ticker = [CADisplayLink displayLinkWithTarget:self selector:@selector(vsync)];
-        [_ticker addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+//        _ticker = [CADisplayLink displayLinkWithTarget:self selector:@selector(vsync)];
+//        [_ticker addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         _ready = NO;
+        _nativeScale = UIScreen.mainScreen.nativeScale;
     }
     return self;
 }
 
 - (void)vsync {
+    [self render];
+}
+
+- (void)render
+{
     if (!self.ready) {
         return;
     }
-    if (![self.delegate respondsToSelector:@selector(vsync:)]) {
+    if (![self.delegate respondsToSelector:@selector(renderInQueue:)]) {
         return;
     }
     @autoreleasepool {
-        [self.delegate vsync:self.commandQueue];
+        [self.delegate renderInQueue:self.commandQueue];
     }
 }
 

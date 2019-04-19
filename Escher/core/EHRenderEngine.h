@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol EHRenderEngineDelegate <NSObject>
 
-- (void)vsync:(id<MTLCommandQueue>)commandQueue;
+- (void)renderInQueue:(id<MTLCommandQueue>)commandQueue;
 
 @end
 
@@ -24,9 +24,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) id<EHRenderEngineDelegate> delegate;
 
 @property (nonatomic, strong, readonly) id<MTLDevice> device;
+@property (nonatomic, assign, readonly) double nativeScale;
 
 - (void)start;
-- (void)pause;
+- (void)render;
 
 @end
 

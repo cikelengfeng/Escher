@@ -17,6 +17,7 @@
 @property (nonatomic, assign) NSTimeInterval duration;
 @property (nonatomic, assign) NSUInteger frameRate;//default is 60
 @property (nonatomic, assign) BOOL reversed;
+@property (nonatomic, strong) id<EHTicker> ticker;
 
 
 @end
@@ -37,6 +38,7 @@
         [ticker setVsyncCallback:^{
             [self onVsync];
         }];
+        _ticker = ticker;
     }
     return self;
 }
@@ -181,6 +183,16 @@
 - (void)setState:(EHAnimatorState)state
 {
     _state = state;
+    if (_state == EHAnimatorStateForwarding
+        || _state == EHAnimatorStateReversing) {
+        [self.ticker start];
+    } else if (_state == EHAnimatorStatePaused) {
+        [self.ticker pause];
+    } else if (_state == EHAnimatorStateInitial
+               || _state == EHAnimatorStateCompleted
+               || _state == EHAnimatorStateCancelled) {
+        [self.ticker stop];
+    }
     if (self.stateChanged) {
         self.stateChanged(_state);
     }

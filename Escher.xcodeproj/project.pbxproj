@@ -19,14 +19,19 @@
 		421C46202265AF2900AD928F /* EHRenderEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = 421C461F2265AF2900AD928F /* EHRenderEngine.m */; };
 		421C46232265B0A100AD928F /* Geometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 421C46222265B0A100AD928F /* Geometry.m */; };
 		421C46262265C1E900AD928F /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 421C46252265C1E900AD928F /* Metal.framework */; };
-		421C46282265C66000AD928F /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 421C46272265C66000AD928F /* Shaders.metal */; };
 		421C462B2265CBD200AD928F /* MetalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 421C462A2265CBD200AD928F /* MetalViewController.m */; };
 		421C462E2265E34E00AD928F /* EHAnimator.m in Sources */ = {isa = PBXBuildFile; fileRef = 421C462D2265E34E00AD928F /* EHAnimator.m */; };
+		421F6439226899D4003C7A50 /* EHDrawCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 421F6438226899D4003C7A50 /* EHDrawCall.m */; };
+		421F643C22689AA1003C7A50 /* EHPaint.m in Sources */ = {isa = PBXBuildFile; fileRef = 421F643B22689AA1003C7A50 /* EHPaint.m */; };
+		4247D07822696C9C0043DDFA /* EHCanvas.m in Sources */ = {isa = PBXBuildFile; fileRef = 4247D07722696C9C0043DDFA /* EHCanvas.m */; };
+		4247D07B226975130043DDFA /* EHPaintAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 4247D07A226975130043DDFA /* EHPaintAction.m */; };
 		427D7F272266EF9E004772D6 /* EHRenderObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F262266EF9E004772D6 /* EHRenderObject.m */; };
 		427D7F2A22683F95004772D6 /* EHImageRenderBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F2922683F95004772D6 /* EHImageRenderBox.m */; };
 		427D7F2D22684232004772D6 /* EHRenderBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F2C22684232004772D6 /* EHRenderBox.m */; };
 		427D7F312268609E004772D6 /* ImageShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F302268609E004772D6 /* ImageShaders.metal */; };
 		427D7F3322686DDC004772D6 /* test.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 427D7F3222686DDC004772D6 /* test.jpg */; };
+		427D7F3622688559004772D6 /* EHTicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F3522688559004772D6 /* EHTicker.m */; };
+		427D7F3922688D03004772D6 /* EHSingleChildRenderBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 427D7F3822688D03004772D6 /* EHSingleChildRenderBox.m */; };
 		4298AECA2265EA6A00157018 /* EHInterpolator.m in Sources */ = {isa = PBXBuildFile; fileRef = 4298AEC92265EA6A00157018 /* EHInterpolator.m */; };
 /* End PBXBuildFile section */
 
@@ -363,11 +368,18 @@
 		421C46212265B0A100AD928F /* Geometry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Geometry.h; sourceTree = "<group>"; };
 		421C46222265B0A100AD928F /* Geometry.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Geometry.m; sourceTree = "<group>"; };
 		421C46252265C1E900AD928F /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
-		421C46272265C66000AD928F /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		421C46292265CBD200AD928F /* MetalViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalViewController.h; sourceTree = "<group>"; };
 		421C462A2265CBD200AD928F /* MetalViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MetalViewController.m; sourceTree = "<group>"; };
 		421C462C2265E34E00AD928F /* EHAnimator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHAnimator.h; sourceTree = "<group>"; };
 		421C462D2265E34E00AD928F /* EHAnimator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHAnimator.m; sourceTree = "<group>"; };
+		421F6437226899D4003C7A50 /* EHDrawCall.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHDrawCall.h; sourceTree = "<group>"; };
+		421F6438226899D4003C7A50 /* EHDrawCall.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHDrawCall.m; sourceTree = "<group>"; };
+		421F643A22689AA1003C7A50 /* EHPaint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHPaint.h; sourceTree = "<group>"; };
+		421F643B22689AA1003C7A50 /* EHPaint.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHPaint.m; sourceTree = "<group>"; };
+		4247D07622696C9C0043DDFA /* EHCanvas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHCanvas.h; sourceTree = "<group>"; };
+		4247D07722696C9C0043DDFA /* EHCanvas.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHCanvas.m; sourceTree = "<group>"; };
+		4247D079226975130043DDFA /* EHPaintAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHPaintAction.h; sourceTree = "<group>"; };
+		4247D07A226975130043DDFA /* EHPaintAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHPaintAction.m; sourceTree = "<group>"; };
 		427D7F252266EF9E004772D6 /* EHRenderObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHRenderObject.h; sourceTree = "<group>"; };
 		427D7F262266EF9E004772D6 /* EHRenderObject.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHRenderObject.m; sourceTree = "<group>"; };
 		427D7F2822683F95004772D6 /* EHImageRenderBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHImageRenderBox.h; sourceTree = "<group>"; };
@@ -378,6 +390,10 @@
 		427D7F2F22686057004772D6 /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
 		427D7F302268609E004772D6 /* ImageShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ImageShaders.metal; sourceTree = "<group>"; };
 		427D7F3222686DDC004772D6 /* test.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = test.jpg; sourceTree = "<group>"; };
+		427D7F3422688559004772D6 /* EHTicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHTicker.h; sourceTree = "<group>"; };
+		427D7F3522688559004772D6 /* EHTicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHTicker.m; sourceTree = "<group>"; };
+		427D7F3722688D03004772D6 /* EHSingleChildRenderBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHSingleChildRenderBox.h; sourceTree = "<group>"; };
+		427D7F3822688D03004772D6 /* EHSingleChildRenderBox.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHSingleChildRenderBox.m; sourceTree = "<group>"; };
 		4298AEC82265EA6A00157018 /* EHInterpolator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EHInterpolator.h; sourceTree = "<group>"; };
 		4298AEC92265EA6A00157018 /* EHInterpolator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EHInterpolator.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -989,17 +1005,17 @@
 		421C461D2265AED300AD928F /* core */ = {
 			isa = PBXGroup;
 			children = (
+				421F64362268999C003C7A50 /* draw */,
 				421C461E2265AF2900AD928F /* EHRenderEngine.h */,
 				421C461F2265AF2900AD928F /* EHRenderEngine.m */,
-				421C46272265C66000AD928F /* Shaders.metal */,
 				427D7F2F22686057004772D6 /* ShaderTypes.h */,
 				427D7F302268609E004772D6 /* ImageShaders.metal */,
-				421C46212265B0A100AD928F /* Geometry.h */,
-				421C46222265B0A100AD928F /* Geometry.m */,
 				421C462C2265E34E00AD928F /* EHAnimator.h */,
 				421C462D2265E34E00AD928F /* EHAnimator.m */,
 				4298AEC82265EA6A00157018 /* EHInterpolator.h */,
 				4298AEC92265EA6A00157018 /* EHInterpolator.m */,
+				427D7F3422688559004772D6 /* EHTicker.h */,
+				427D7F3522688559004772D6 /* EHTicker.m */,
 				427D7F252266EF9E004772D6 /* EHRenderObject.h */,
 				427D7F262266EF9E004772D6 /* EHRenderObject.m */,
 				427D7F2B22684232004772D6 /* EHRenderBox.h */,
@@ -1007,6 +1023,8 @@
 				427D7F2C22684232004772D6 /* EHRenderBox.m */,
 				427D7F2822683F95004772D6 /* EHImageRenderBox.h */,
 				427D7F2922683F95004772D6 /* EHImageRenderBox.m */,
+				427D7F3722688D03004772D6 /* EHSingleChildRenderBox.h */,
+				427D7F3822688D03004772D6 /* EHSingleChildRenderBox.m */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -1017,6 +1035,23 @@
 				421C46252265C1E900AD928F /* Metal.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		421F64362268999C003C7A50 /* draw */ = {
+			isa = PBXGroup;
+			children = (
+				421C46212265B0A100AD928F /* Geometry.h */,
+				421C46222265B0A100AD928F /* Geometry.m */,
+				4247D07622696C9C0043DDFA /* EHCanvas.h */,
+				4247D07722696C9C0043DDFA /* EHCanvas.m */,
+				421F643A22689AA1003C7A50 /* EHPaint.h */,
+				421F643B22689AA1003C7A50 /* EHPaint.m */,
+				4247D079226975130043DDFA /* EHPaintAction.h */,
+				4247D07A226975130043DDFA /* EHPaintAction.m */,
+				421F6437226899D4003C7A50 /* EHDrawCall.h */,
+				421F6438226899D4003C7A50 /* EHDrawCall.m */,
+			);
+			path = draw;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1120,19 +1155,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				427D7F3622688559004772D6 /* EHTicker.m in Sources */,
 				427D7F2D22684232004772D6 /* EHRenderBox.m in Sources */,
 				421C435822643C3A00AD928F /* ViewController.mm in Sources */,
 				421C462E2265E34E00AD928F /* EHAnimator.m in Sources */,
-				421C46282265C66000AD928F /* Shaders.metal in Sources */,
 				421C462B2265CBD200AD928F /* MetalViewController.m in Sources */,
 				421C461B22643C8300AD928F /* skcms.cc in Sources */,
+				4247D07B226975130043DDFA /* EHPaintAction.m in Sources */,
 				421C436322643C3B00AD928F /* main.m in Sources */,
 				427D7F2A22683F95004772D6 /* EHImageRenderBox.m in Sources */,
 				427D7F312268609E004772D6 /* ImageShaders.metal in Sources */,
+				427D7F3922688D03004772D6 /* EHSingleChildRenderBox.m in Sources */,
 				421C46232265B0A100AD928F /* Geometry.m in Sources */,
 				4298AECA2265EA6A00157018 /* EHInterpolator.m in Sources */,
 				427D7F272266EF9E004772D6 /* EHRenderObject.m in Sources */,
 				421C46202265AF2900AD928F /* EHRenderEngine.m in Sources */,
+				421F6439226899D4003C7A50 /* EHDrawCall.m in Sources */,
+				421F643C22689AA1003C7A50 /* EHPaint.m in Sources */,
+				4247D07822696C9C0043DDFA /* EHCanvas.m in Sources */,
 				421C435522643C3A00AD928F /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

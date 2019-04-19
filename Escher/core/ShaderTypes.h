@@ -38,6 +38,17 @@ typedef struct
     
     // 2D texture coordinate
     vector_float2 textureCoordinate;
-} EHVertex;
+} EHTextureVertex;
+
+typedef struct
+{
+    // Positions in pixel space
+    // (e.g. a value of 100 indicates 100 pixels from the center)
+    vector_float2 position;
+    
+    // Floating-point RGBA colors
+    vector_float4 color;
+} EHColorVertex;
+
 
 #endif /* ShaderTypes_h */

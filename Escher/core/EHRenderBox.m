@@ -8,6 +8,7 @@
 
 #import "EHRenderBox.h"
 #import "EHRenderBoxInternal.h"
+#import "EHRenderEngine.h"
 
 @implementation EHLayoutSizeBox
 
@@ -54,5 +55,10 @@
     
 }
 
+- (EHSize)pixelSize
+{
+    double scale = [EHRenderEngine sharedInstance].nativeScale;
+    return (EHSize) {self.size.width * scale, self.size.height * scale};
+}
 
 @end

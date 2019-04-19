@@ -84,9 +84,12 @@
     self.dirty = YES;
 }
 
-- (EHRect)dirtyRectInPixel
+- (EHRect)dirtyPixelRectInContext:(EHRenderContext *)context
 {
-    return (EHRect) {0.0, 0.0, self.pixelSize.width, self.pixelSize.height};
+    if (self.dirty) {
+        return (EHRect) {context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height};
+    }
+    return (EHRect) {context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, 0.0, 0.0};
 }
 
 -(void)renderInContext:(EHRenderContext *)context
@@ -114,13 +117,10 @@
     
     [renderEncoder setFragmentTexture:self.texture
                               atIndex:EHTextureIndexBaseColor];
-    
     // Draw the triangles.
     [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                       vertexStart:0
                       vertexCount:self.verticesCount];
-    
-    self.dirty = NO;
 }
 
 @end

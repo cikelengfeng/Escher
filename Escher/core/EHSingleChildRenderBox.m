@@ -59,7 +59,6 @@
                                                                        options:MTLResourceStorageModeShared];
     // Calculate the number of vertices by dividing the byte length by the size of each vertex
     self.verticesCount = sizeof(quadVertices) / sizeof(EHColorVertex);
-    self.dirty = YES;
 }
 
 - (void)setOffset:(EHPoint)offset
@@ -68,34 +67,54 @@
     self.child.dirty = YES;
 }
 
-- (void)renderInContext:(EHRenderContext *)context
+- (void)setDirty:(BOOL)dirty
+{
+    super.dirty = dirty;
+    if (dirty == NO) {
+        self.child.dirty = NO;
+    }
+}
+
+- (EHRect)dirtyPixelRectInContext:(EHRenderContext *)context
 {
     if (self.dirty) {
-        id<MTLRenderCommandEncoder> renderEncoder = context.encoder;
-        
-        // Set the region of the drawable to draw into.
-        
-        [renderEncoder setViewport:(MTLViewport){context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height, -1.0, 1.0 }];
-        
-        [renderEncoder setRenderPipelineState:self.pipelineState];
-        [renderEncoder setVertexBuffer:self.vertices
-                                offset:0
-                               atIndex:EHVertexInputIndexVertices];
-        
-        vector_uint2 size = {
-            self.pixelSize.width,
-            self.pixelSize.height
-        };
-        [renderEncoder setVertexBytes:&size
-                               length:sizeof(size)
-                              atIndex:EHVertexInputIndexViewportSize];
-        
-        // Draw the triangles.
-        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
-                          vertexStart:0
-                          vertexCount:self.verticesCount];
-        
+        return (EHRect) {context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height};
     }
+    if (self.child.dirty) {
+        double x = MIN(MAX(self.offset.x, context.targetRectInPixel.origin.x), context.targetRectInPixel.origin.x + self.pixelSize.width);
+        double y = MIN(MAX(self.offset.y, context.targetRectInPixel.origin.y), context.targetRectInPixel.origin.y + self.pixelSize.height);
+        EHRect childDirtyRect = [self.child dirtyPixelRectInContext:context];
+        double width = MIN(childDirtyRect.size.width, self.pixelSize.width);
+        double height = MIN(childDirtyRect.size.height, self.pixelSize.height);
+        return (EHRect) {x, y, width, height};
+    }
+    return (EHRect) {context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, 0.0, 0.0};
+}
+
+- (void)renderInContext:(EHRenderContext *)context
+{
+    id<MTLRenderCommandEncoder> renderEncoder = context.encoder;
+    
+    // Set the region of the drawable to draw into.
+    
+    [renderEncoder setViewport:(MTLViewport){context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height, -1.0, 1.0 }];
+    
+    [renderEncoder setRenderPipelineState:self.pipelineState];
+    [renderEncoder setVertexBuffer:self.vertices
+                            offset:0
+                           atIndex:EHVertexInputIndexVertices];
+    
+    vector_uint2 size = {
+        self.pixelSize.width,
+        self.pixelSize.height
+    };
+    [renderEncoder setVertexBytes:&size
+                           length:sizeof(size)
+                          atIndex:EHVertexInputIndexViewportSize];
+        // Draw the triangles.
+    [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
+                      vertexStart:0
+                      vertexCount:self.verticesCount];
     EHRect rect = (EHRect) {self.offset, self.size.width - self.offset.x, self.size.height - self.offset.y};
     EHRenderContext *childContext = [[EHRenderContext alloc] initWithCanvas:context.canvas encoder:context.encoder targetRect:rect];
     [self.child renderInContext:childContext];

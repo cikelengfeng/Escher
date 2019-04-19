@@ -10,7 +10,7 @@
 #import "EHRenderEngine.h"
 #import "EHAnimator.h"
 #import "EHInterpolator.h"
-#import "EHRenderObject.h"
+#import "EHRenderBoxInternal.h"
 #import <ImageIO/ImageIO.h>
 
 @import Metal;
@@ -22,7 +22,7 @@
 
 @property (nonatomic, strong) CAMetalLayer *metalLayer;
 
-@property (nonatomic, strong) id<EHRenderObject> rootRenderObject;
+@property (nonatomic, strong) EHRenderBox *rootRenderObject;
 
 @end
 
@@ -126,12 +126,16 @@
     renderPass.colorAttachments[0].texture = drawable.texture;
     id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass];
     EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect];
-    [self performRenderInContext:context];
     
+    [self performRenderInContext:context];
+
     [encoder endEncoding];
+    
+    self.rootRenderObject.dirty = NO;
     
     [commandBuffer presentDrawable:context.canvas];
     [commandBuffer commit];
+    
 }
 
 

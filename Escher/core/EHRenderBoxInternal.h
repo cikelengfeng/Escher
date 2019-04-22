@@ -10,6 +10,7 @@
 #define EHRenderBoxInternal_h
 #import "EHRenderBox.h"
 #import "Geometry.h"
+#import "EHRenderEngine.h"
 
 @interface EHLayoutSizeBox ()
 

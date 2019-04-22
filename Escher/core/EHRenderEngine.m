@@ -8,7 +8,42 @@
 
 #import "EHRenderEngine.h"
 @import UIKit;
-@import QuartzCore;
+
+
+@interface EHRenderContext ()
+
+@property (nonatomic, assign) EHRect targetRect;
+@property (nonatomic, strong) id<CAMetalDrawable> canvas;
+@property (nonatomic, strong) id<MTLRenderCommandEncoder> encoder;
+
+@end
+
+@implementation EHRenderContext
+
+@dynamic targetRectInPixel;
+
+- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(nonnull id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect
+{
+    self = [super init];
+    if (self) {
+        _canvas = canvas;
+        _encoder = encoder;
+        _targetRect = targetRect;
+    }
+    return self;
+}
+
+- (double)nativeScale
+{
+    return UIScreen.mainScreen.nativeScale;
+}
+
+- (EHRect)targetRectInPixel
+{
+    return (EHRect) {self.targetRect.origin.x * self.nativeScale, self.targetRect.origin.y * self.nativeScale, self.targetRect.size.width * self.nativeScale, self.targetRect.size.height * self.nativeScale};
+}
+
+@end
 
 @interface EHRenderEngine ()
 
@@ -60,12 +95,37 @@ static EHRenderEngine *singleton;
     if (!self.ready) {
         return;
     }
-    if (![self.delegate respondsToSelector:@selector(renderInQueue:)]) {
+    if (!self.layer) {
         return;
     }
-    @autoreleasepool {
-        [self.delegate renderInQueue:self.commandQueue];
+    if (![self.delegate respondsToSelector:@selector(renderInContext:)]) {
+        return;
     }
+    id<CAMetalDrawable> drawable = [self.layer nextDrawable];
+    if (!drawable) {
+        return;
+    }
+    id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
+    if (!commandBuffer) {
+        return;
+    }
+    EHRect rect = (EHRect) {self.layer.bounds.origin.x, self.layer.bounds.origin.y, self.layer.bounds.size.width, self.layer.bounds.size.height};
+    MTLRenderPassDescriptor *renderPass = [MTLRenderPassDescriptor renderPassDescriptor];
+    renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
+    renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1);
+    renderPass.colorAttachments[0].texture = drawable.texture;
+    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass];
+    EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect];
+    
+    @autoreleasepool {
+        [self.delegate renderInContext:context];
+    }
+    
+    [encoder endEncoding];
+    
+    [commandBuffer presentDrawable:context.canvas];
+    [commandBuffer commit];
+    
 }
 
 - (void)start

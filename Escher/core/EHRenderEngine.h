@@ -7,13 +7,27 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Geometry.h"
 @import Metal;
+@import QuartzCore;
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface EHRenderContext : NSObject
+
+@property (nonatomic, assign, readonly) EHRect targetRect;
+@property (nonatomic, assign, readonly) EHRect targetRectInPixel;
+@property (nonatomic, strong, readonly) id<CAMetalDrawable> canvas;
+@property (nonatomic, strong, readonly) id<MTLRenderCommandEncoder> encoder;
+@property (nonatomic, assign, readonly) double nativeScale;
+
+- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect;
+
+@end
+
 @protocol EHRenderEngineDelegate <NSObject>
 
-- (void)renderInQueue:(id<MTLCommandQueue>)commandQueue;
+- (void)renderInContext:(EHRenderContext *)context;
 
 @end
 
@@ -22,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 @property (nonatomic, weak) id<EHRenderEngineDelegate> delegate;
+@property (nonatomic, weak) CAMetalLayer *layer;
 
 @property (nonatomic, strong, readonly) id<MTLDevice> device;
 @property (nonatomic, assign, readonly) double nativeScale;

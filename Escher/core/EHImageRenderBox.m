@@ -82,6 +82,7 @@
     // Calculate the number of vertices by dividing the byte length by the size of each vertex
     self.verticesCount = sizeof(quadVertices) / sizeof(EHTextureVertex);
     self.dirty = YES;
+    
 }
 
 - (EHRect)dirtyPixelRectInContext:(EHRenderContext *)context

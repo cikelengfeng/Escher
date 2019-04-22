@@ -11,6 +11,7 @@
 @import Metal;
 
 #import "Geometry.h"
+#import "EHRenderEngine.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,18 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol EHLayoutSizeConstraints <NSObject>
 
 - (BOOL)isSizeSatisfied:(id<EHLayoutSize>)layoutSize;
-
-@end
-
-@interface EHRenderContext : NSObject
-
-@property (nonatomic, assign, readonly) EHRect targetRect;
-@property (nonatomic, assign, readonly) EHRect targetRectInPixel;
-@property (nonatomic, strong, readonly) id<CAMetalDrawable> canvas;
-@property (nonatomic, strong, readonly) id<MTLRenderCommandEncoder> encoder;
-@property (nonatomic, assign, readonly) double nativeScale;
-
-- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect;
 
 @end
 

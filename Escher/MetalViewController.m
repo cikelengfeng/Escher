@@ -82,6 +82,7 @@
     [container setTriangle];
     
     self.rootRenderObject = container;
+    [EHRenderEngine sharedInstance].layer = self.metalLayer;
     [[EHRenderEngine sharedInstance] start];
     [[EHRenderEngine sharedInstance] render];
     
@@ -104,39 +105,11 @@
     [animator start];
 }
 
-- (void)performRenderInContext:(EHRenderContext *)context
+- (void)renderInContext:(EHRenderContext *)context
 {
     [self.rootRenderObject renderInContext:context];
 }
 
-- (void)renderInQueue:(id<MTLCommandQueue>)commandQueue
-{
-    id<CAMetalDrawable> drawable = [self.metalLayer nextDrawable];
-    if (!drawable) {
-        return;
-    }
-    id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-    if (!commandBuffer) {
-        return;
-    }
-    EHRect rect = (EHRect) {self.metalLayer.bounds.origin.x, self.metalLayer.bounds.origin.y, self.metalLayer.bounds.size.width, self.metalLayer.bounds.size.height};
-    MTLRenderPassDescriptor *renderPass = [MTLRenderPassDescriptor renderPassDescriptor];
-    renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1);
-    renderPass.colorAttachments[0].texture = drawable.texture;
-    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass];
-    EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect];
-    
-    [self performRenderInContext:context];
-
-    [encoder endEncoding];
-    
-    self.rootRenderObject.dirty = NO;
-    
-    [commandBuffer presentDrawable:context.canvas];
-    [commandBuffer commit];
-    
-}
 
 
 

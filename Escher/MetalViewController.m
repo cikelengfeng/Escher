@@ -17,6 +17,7 @@
 
 #import "EHImageRenderBox.h"
 #import "EHSingleChildRenderBox.h"
+#import "EHTextRenderBox.h"
 
 @interface MetalViewController () <EHRenderEngineDelegate>
 
@@ -55,10 +56,7 @@
     double scale = [EHRenderEngine sharedInstance].nativeScale;
     CAMetalLayer *metalLayer = [CAMetalLayer new];
     metalLayer.device = [EHRenderEngine sharedInstance].device;
-    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    metalLayer.framebufferOnly = YES;
     metalLayer.frame = self.view.layer.frame;
-    metalLayer.contentsScale = scale;
     [self.view.layer addSublayer:metalLayer];
     self.metalLayer = metalLayer;
     
@@ -75,11 +73,15 @@
     CFRelease(imageSource);
     CGImageRelease(image);
     
+    EHTextRenderBox *textView = [[EHTextRenderBox alloc] init];
+    textView.size = [[EHLayoutSizeBox alloc] initWithWidth:200 height:100];
+    textView.text = @"HelloEscher!";
+    
     
     EHSingleChildRenderBox *container = [[EHSingleChildRenderBox alloc] initWithSize:[[EHLayoutSizeBox alloc] initWithWidth:CGRectGetWidth(metalLayer.bounds) height:CGRectGetHeight(metalLayer.bounds)]];
-    container.child = imageView;
-    container.offset = (EHPoint) {100, 100};
-    [container setTriangle];
+    container.child = textView;
+    container.offset = (EHPoint) {50, 100};
+    container.backgroundColor = EHColorMake(0, 255, 255, 255);
     
     self.rootRenderObject = container;
     [EHRenderEngine sharedInstance].layer = self.metalLayer;
@@ -89,10 +91,12 @@
     EHSimpleTicker *ticker = [[EHSimpleTicker alloc] init];
     EHAnimator *animator = [[EHAnimator alloc] initWithDuration:1 ticker:ticker];
     EHNumberInterpolator *interpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(100)];
+//    EHNumberInterpolator *colorInterpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(255)];
     __weak typeof(animator) weakAnimator = animator;
     [animator setListener:^{
         EHPoint offset = {container.offset.x, 100 + [interpolator evaluate:weakAnimator].doubleValue};
         container.offset = offset;
+        container.alpha = [interpolator evaluate:weakAnimator].doubleValue / 100.0;
         [[EHRenderEngine sharedInstance] render];
     }];
     [animator setStateChanged:^(EHAnimatorState state) {
@@ -108,6 +112,7 @@
 - (void)renderInContext:(EHRenderContext *)context
 {
     [self.rootRenderObject renderInContext:context];
+    self.rootRenderObject.dirty = NO;
 }
 
 

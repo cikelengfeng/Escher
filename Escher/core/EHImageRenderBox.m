@@ -35,6 +35,13 @@
         pipelineStateDesc.vertexFunction = vertexProgram;
         pipelineStateDesc.fragmentFunction = fragmentProgram;
         pipelineStateDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+        pipelineStateDesc.colorAttachments[0].blendingEnabled = YES;
+        pipelineStateDesc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDesc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDesc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        pipelineStateDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
         NSError *error;
         _pipelineState = [[EHRenderEngine sharedInstance].device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
     }
@@ -104,7 +111,7 @@
     [renderEncoder setViewport:(MTLViewport){context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height, -1.0, 1.0 }];
     
     [renderEncoder setRenderPipelineState:self.pipelineState];
-    [renderEncoder setVertexBuffer:_vertices
+    [renderEncoder setVertexBuffer:self.vertices
                             offset:0
                            atIndex:EHVertexInputIndexVertices];
     

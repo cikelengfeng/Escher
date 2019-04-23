@@ -16,6 +16,7 @@
 @property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
 @property (nonatomic, strong) id<MTLBuffer> vertices;
 @property (nonatomic, assign) int verticesCount;
+@property (nonatomic, assign) EHPoint dirtyOffset;
 
 @end
 
@@ -35,36 +36,53 @@
         pipelineStateDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         NSError *error;
         _pipelineState = [[EHRenderEngine sharedInstance].device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
+        _alpha = 1;
         
+        _backgroundColor = EHColorMake(0, 0, 0, 1);
+        [self remakeVertices];
     }
     return self;
 }
 
-- (void)setTriangle
+- (void)setBackgroundColor:(EHColor)backgroundColor
 {
-    EHColorVertex quadVertices[] =
+    if (EHColorEqual(_backgroundColor, backgroundColor)) {
+        return;
+    }
+    _backgroundColor = backgroundColor;
+    [self remakeVertices];
+    self.dirty = YES;
+}
+
+- (void)remakeVertices
+{
+    const vector_float4 color = {self.backgroundColor.red / 255.f, self.backgroundColor.green / 255.f, self.backgroundColor.blue / 255.f, self.backgroundColor.alpha / 255.f};
+    const EHColorVertex quadVertices[] =
     {
         // 2D positions,    RGBA colors
-        { {  self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
-        { { -self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
-        { {    0,   self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
-        { {  self.pixelSize.width * 3 / 2,  -self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
-        { {  self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
-        { {  self.pixelSize.width,   self.pixelSize.height / 2 }, { 1, 0, 0, 1 } },
+        { {  self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, color },//右下角
+        { { -self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, color },//左下角
+        { { -self.pixelSize.width / 2,   self.pixelSize.height / 2 }, color },//左上角
+        
+        { { -self.pixelSize.width / 2,   self.pixelSize.height / 2 }, color },//左上角
+        { {  self.pixelSize.width / 2,   self.pixelSize.height / 2 }, color },//右上角
+        { {  self.pixelSize.width / 2,  -self.pixelSize.height / 2 }, color },//右下角
     };
     
     // Create a vertex buffer, and initialize it with the quadVertices array
     self.vertices = [[EHRenderEngine sharedInstance].device newBufferWithBytes:quadVertices
                                                                         length:sizeof(quadVertices)
                                                                        options:MTLResourceStorageModeShared];
-    // Calculate the number of vertices by dividing the byte length by the size of each vertex
     self.verticesCount = sizeof(quadVertices) / sizeof(EHColorVertex);
 }
 
 - (void)setOffset:(EHPoint)offset
 {
+    if (self.child.dirty == NO) {
+        self.dirtyOffset = _offset;
+        self.child.dirty = YES;
+    }
     _offset = offset;
-    self.child.dirty = YES;
 }
 
 - (void)setDirty:(BOOL)dirty
@@ -81,8 +99,8 @@
         return (EHRect) {context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height};
     }
     if (self.child.dirty) {
-        double x = MIN(MAX(self.offset.x, context.targetRectInPixel.origin.x), context.targetRectInPixel.origin.x + self.pixelSize.width);
-        double y = MIN(MAX(self.offset.y, context.targetRectInPixel.origin.y), context.targetRectInPixel.origin.y + self.pixelSize.height);
+        double x = MIN(MAX(self.dirtyOffset.x, context.targetRectInPixel.origin.x), context.targetRectInPixel.origin.x + self.pixelSize.width);
+        double y = MIN(MAX(self.dirtyOffset.y, context.targetRectInPixel.origin.y), context.targetRectInPixel.origin.y + self.pixelSize.height);
         EHRect childDirtyRect = [self.child dirtyPixelRectInContext:context];
         double width = MIN(childDirtyRect.size.width, self.pixelSize.width);
         double height = MIN(childDirtyRect.size.height, self.pixelSize.height);
@@ -111,13 +129,24 @@
     [renderEncoder setVertexBytes:&size
                            length:sizeof(size)
                           atIndex:EHVertexInputIndexViewportSize];
-        // Draw the triangles.
+//    if (self.child.dirty) {
+//        EHRect rect = [self dirtyPixelRectInContext:context];
+//        MTLScissorRect scissor = (MTLScissorRect) {(NSUInteger)rect.origin.x, (NSUInteger)rect.origin.y, (NSUInteger)rect.size.width, (NSUInteger)rect.size.height};
+//        [renderEncoder setScissorRect:scissor];
+//    }
+    // Draw the triangles.
     [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                       vertexStart:0
                       vertexCount:self.verticesCount];
-    EHRect rect = (EHRect) {self.offset, self.size.width - self.offset.x, self.size.height - self.offset.y};
-    EHRenderContext *childContext = [[EHRenderContext alloc] initWithCanvas:context.canvas encoder:context.encoder targetRect:rect];
-    [self.child renderInContext:childContext];
+    
+    
+    {
+        EHRect rect = (EHRect) {self.offset, self.size.width - self.offset.x, self.size.height - self.offset.y};
+        EHRenderContext *childContext = [[EHRenderContext alloc] initWithCanvas:context.canvas encoder:context.encoder targetRect:rect];
+        const float alpha[] = {self.alpha};
+        [renderEncoder setFragmentBytes:&alpha length:sizeof(alpha) atIndex:EHFragmentInputIndexAlpha];
+        [self.child renderInContext:childContext];
+    }
 }
 
 @end

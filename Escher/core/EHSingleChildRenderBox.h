@@ -7,6 +7,7 @@
 //
 
 #import "EHRenderBox.h"
+#import "EHColor.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,10 +17,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 //in point, in this render box coordination
 @property (nonatomic, assign) EHPoint offset;
+@property (nonatomic, assign) double alpha;
+@property (nonatomic, assign) EHColor backgroundColor;
 
 - (instancetype)initWithSize:(EHLayoutSizeBox *)size;
-
-- (void)setTriangle;
 
 @end
 

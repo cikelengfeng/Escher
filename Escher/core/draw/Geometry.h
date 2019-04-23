@@ -6,6 +6,9 @@
 //  Copyright © 2019 DXLab. All rights reserved.
 //
 
+#ifndef Geometry_h
+#define Geometry_h
+
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -30,3 +33,5 @@ struct EHRect {
 typedef struct EHRect EHRect;
 
 NS_ASSUME_NONNULL_END
+
+#endif

@@ -43,6 +43,18 @@
     return (EHRect) {self.targetRect.origin.x * self.nativeScale, self.targetRect.origin.y * self.nativeScale, self.targetRect.size.width * self.nativeScale, self.targetRect.size.height * self.nativeScale};
 }
 
+- (id)copy
+{
+    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:self.targetRect];
+    return copy;
+}
+
+- (instancetype)copyWithTargetRect:(EHRect)targetRect
+{
+    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:targetRect];
+    return copy;
+}
+
 @end
 
 @interface EHRenderEngine ()
@@ -114,6 +126,7 @@ static EHRenderEngine *singleton;
     renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
     renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1);
     renderPass.colorAttachments[0].texture = drawable.texture;
+//    renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
     id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass];
     EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect];
     
@@ -136,6 +149,14 @@ static EHRenderEngine *singleton;
 - (void)pause
 {
     self.ready = NO;
+}
+
+- (void)setLayer:(CAMetalLayer *)layer
+{
+    _layer = layer;
+    _layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    _layer.framebufferOnly = YES;
+    _layer.contentsScale = self.nativeScale;
 }
 
 @end

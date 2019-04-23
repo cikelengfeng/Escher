@@ -26,6 +26,12 @@ typedef enum EHTextureIndex
     EHTextureIndexBaseColor = 0,
 } EHTextureIndex;
 
+typedef enum EHFragmentInputIndex
+{
+    EHFragmentInputIndexAlpha,
+    EHFragmentInputIndexColor
+} EHFragmentInputIndex;
+
 //  This structure defines the layout of each vertex in the array of vertices set as an input to the
 //    Metal vertex shader.  Since this header is shared between the .metal shader and C code,
 //    you can be sure that the layout of the vertex array in the code matches the layout that

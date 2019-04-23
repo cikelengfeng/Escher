@@ -66,7 +66,8 @@ vertexShader(uint vertexID [[ vertex_id ]],
 // Fragment function
 fragment float4
 samplingRGBxBGRShader(TextureRasterizerData in [[stage_in]],
-               texture2d<half> colorTexture [[ texture(EHTextureIndexBaseColor) ]])
+               texture2d<half> colorTexture [[ texture(EHTextureIndexBaseColor) ]],
+                constant float *alpha [[ buffer(EHFragmentInputIndexAlpha) ]])
 {
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
@@ -75,7 +76,7 @@ samplingRGBxBGRShader(TextureRasterizerData in [[stage_in]],
     const half4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
     
     // return the color of the texture
-    return float4(colorSample[2], colorSample[1], colorSample[0], colorSample[3]);
+    return float4(colorSample[2], colorSample[1], colorSample[0], alpha[0]);
 }
 
 typedef struct
@@ -134,3 +135,18 @@ fragment float4 shapeFragmentShader(ShapeRasterizerData in [[stage_in]])
     return in.color;
 }
 
+
+fragment float4
+samplingGray8ToBGRShader(TextureRasterizerData in [[stage_in]],
+                      texture2d<half> colorTexture [[ texture(EHTextureIndexBaseColor) ]],
+                      constant float *color [[ buffer(EHFragmentInputIndexColor) ]])
+{
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    
+    // Sample the texture to obtain a color
+    const half4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
+    
+    // return the color of the texture
+    return float4(1, 1, 1, colorSample[0])*float4(color[0], color[1], color[2], color[3]);
+}

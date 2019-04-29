@@ -141,8 +141,8 @@
     
     
     {
-        EHRect rect = (EHRect) {self.offset, self.size.width - self.offset.x, self.size.height - self.offset.y};
-        EHRenderContext *childContext = [[EHRenderContext alloc] initWithCanvas:context.canvas encoder:context.encoder targetRect:rect];
+        EHRect rect = (EHRect) {context.targetRect.origin.x + self.offset.x, context.targetRect.origin.y + self.offset.y, self.size.width - self.offset.x, self.size.height - self.offset.y};
+        EHRenderContext *childContext = [context copyWithTargetRect:rect];
         const float alpha[] = {self.alpha};
         [renderEncoder setFragmentBytes:&alpha length:sizeof(alpha) atIndex:EHFragmentInputIndexAlpha];
         [self.child renderInContext:childContext];

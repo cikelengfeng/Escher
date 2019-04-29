@@ -102,9 +102,6 @@
 
 -(void)renderInContext:(EHRenderContext *)context
 {
-    if (!self.dirty) {
-        return;
-    }
     id<MTLRenderCommandEncoder> renderEncoder = context.encoder;
     
     // Set the region of the drawable to draw into.

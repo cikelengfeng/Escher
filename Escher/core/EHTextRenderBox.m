@@ -46,7 +46,7 @@
         NSError *error;
         _pipelineState = [[EHRenderEngine sharedInstance].device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
         
-        _textColor = EHColorMake(255, 0, 0, 255);
+        _textColor = EHColorMake(0, 0, 0, 255);
         
         FT_Library ft_lib = {NULL};
         if (FT_Init_FreeType(&ft_lib) != 0) {
@@ -104,24 +104,27 @@
 
 -(void)renderInContext:(EHRenderContext *)context
 {
-    if (!self.dirty) {
-        return;
-    }
-    
     const FT_GlyphSlot g = self.face->glyph;
     const char *utf8str = [_text UTF8String];
     const unsigned long length = strlen(utf8str);
-    double x = context.targetRect.origin.x;
-    double y = context.targetRect.origin.y;
-    FT_Set_Char_Size(self.face, 0, 0, 2274, 3408);
+    double x = 0;
+    double y = 0;
+    double baseline = 0;
+    double scale = [EHRenderEngine sharedInstance].nativeScale;
+    FT_Set_Char_Size(self.face, 0, 0, 768*scale, 1136*scale);
     
     for (int i = 0; i < length; i++) {
         char c = utf8str[i];
         if (FT_Load_Char(self.face, c, FT_LOAD_RENDER)) {
             continue;
         }
-        unsigned int glyphWidth = g->bitmap.width;
-        unsigned int glyphHeight = g->bitmap.rows;
+        float glyphWidth = g->bitmap.width;
+        float glyphHeight = g->bitmap.rows;
+        FT_Vector advance = g->advance;
+        if (glyphWidth == 0) {
+            x += advance.x >> 6;
+            continue;
+        }
         MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatR8Unorm width:glyphWidth height:glyphHeight mipmapped:NO];
         desc.usage = MTLTextureUsageShaderRead;
         id<MTLTexture> texture = [[EHRenderEngine sharedInstance].device newTextureWithDescriptor:desc];
@@ -132,21 +135,21 @@
         const UInt8 *buffer = g->bitmap.buffer;
         [texture replaceRegion:region mipmapLevel:0 withBytes:buffer bytesPerRow:glyphWidth];
         
-        const float width = g->bitmap.width;
-        const float height = g->bitmap.rows;
-        
-        x += width;
+        x += g->bitmap_left >> 6;
+        double penY = y + (g->bitmap_top >> 6);
+        double vw = self.pixelSize.width;
+        double vh = self.pixelSize.height;
         
         EHTextureVertex quadVertices[] =
         {
             // Pixel positions, Texture coordinates
-            { {  width / 2,  -height / 2 },  { 1.f, 1.f } },
-            { { -width / 2,  -height / 2 },  { 0.f, 1.f } },
-            { { -width / 2,   height / 2 },  { 0.f, 0.f } },
+            { {  x + glyphWidth - vw / 2,  vh / 2 - (penY + glyphHeight) },  { 1.f, 1.f } },//右下
+            { {  x - vw / 2             ,  vh / 2 - (penY + glyphHeight) },  { 0.f, 1.f } },//左下
+            { {  x - vw / 2             ,  vh / 2 - penY },  { 0.f, 0.f } },//左上
             
-            { {  width / 2,  -height / 2 },  { 1.f, 1.f } },
-            { { -width / 2,   height / 2 },  { 0.f, 0.f } },
-            { {  width / 2,   height / 2 },  { 1.f, 0.f } },
+            { {  x + glyphWidth - vw / 2,  vh / 2 - (penY + glyphHeight) },  { 1.f, 1.f } },//右下
+            { {  x - vw / 2             ,  vh / 2 - penY },  { 0.f, 0.f } },//左上
+            { {  x + glyphWidth - vw / 2,  vh / 2 - penY },  { 1.f, 0.f } },//右上
         };
         
         // Create a vertex buffer, and initialize it with the quadVertices array
@@ -155,9 +158,9 @@
                                                                                     options:MTLResourceStorageModeShared];
         // Calculate the number of vertices by dividing the byte length by the size of each vertex
         int verticesCount = sizeof(quadVertices) / sizeof(EHTextureVertex);
-        EHRect newRect = (EHRect) {x, y, context.targetRect.size.width, context.targetRect.size.height};
-        EHRenderContext *newContext = [context copyWithTargetRect:newRect];
-        [self renderGlyph:texture vertices:vertices count:verticesCount inContext:newContext];
+        [self renderGlyph:texture vertices:vertices count:verticesCount inContext:context];
+        
+        x += g->advance.x >> 6;
     }
 }
 

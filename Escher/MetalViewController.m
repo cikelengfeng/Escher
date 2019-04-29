@@ -75,12 +75,16 @@
     
     EHTextRenderBox *textView = [[EHTextRenderBox alloc] init];
     textView.size = [[EHLayoutSizeBox alloc] initWithWidth:200 height:100];
-    textView.text = @"HelloEscher!";
+    textView.text = @"Hello Escher! 你好 埃舍尔！";
+    textView.textColor = EHColorMake(123, 255, 0, 255);
     
+    EHSingleChildRenderBox *testContainer = [[EHSingleChildRenderBox alloc] initWithSize:[[EHLayoutSizeBox alloc] initWithWidth:textView.size.width height:textView.size.height]];
+    testContainer.child = textView;
+    testContainer.backgroundColor = EHColorMake(0, 123, 123, 255);
     
     EHSingleChildRenderBox *container = [[EHSingleChildRenderBox alloc] initWithSize:[[EHLayoutSizeBox alloc] initWithWidth:CGRectGetWidth(metalLayer.bounds) height:CGRectGetHeight(metalLayer.bounds)]];
-    container.child = textView;
-    container.offset = (EHPoint) {50, 100};
+    container.child = testContainer;
+    container.offset = (EHPoint) {0, 100};
     container.backgroundColor = EHColorMake(0, 255, 255, 255);
     
     self.rootRenderObject = container;
@@ -89,7 +93,7 @@
     [[EHRenderEngine sharedInstance] render];
     
     EHSimpleTicker *ticker = [[EHSimpleTicker alloc] init];
-    EHAnimator *animator = [[EHAnimator alloc] initWithDuration:1 ticker:ticker];
+    EHAnimator *animator = [[EHAnimator alloc] initWithDuration:5 ticker:ticker];
     EHNumberInterpolator *interpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(100)];
 //    EHNumberInterpolator *colorInterpolator = [[EHNumberInterpolator alloc] initWithBegin:@(0) end:@(255)];
     __weak typeof(animator) weakAnimator = animator;

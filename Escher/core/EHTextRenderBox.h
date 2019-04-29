@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy) NSString *text;
 @property (nonatomic, assign) EHColor textColor;
+@property (nonatomic, assign) double fontSize;
 
 @end
 

@@ -112,9 +112,6 @@
 - (void)renderInContext:(EHRenderContext *)context
 {
     id<MTLRenderCommandEncoder> renderEncoder = context.encoder;
-    
-    // Set the region of the drawable to draw into.
-    
     [renderEncoder setViewport:(MTLViewport){context.targetRectInPixel.origin.x, context.targetRectInPixel.origin.y, self.pixelSize.width, self.pixelSize.height, -1.0, 1.0 }];
     
     [renderEncoder setRenderPipelineState:self.pipelineState];
@@ -129,11 +126,7 @@
     [renderEncoder setVertexBytes:&size
                            length:sizeof(size)
                           atIndex:EHVertexInputIndexViewportSize];
-//    if (self.child.dirty) {
-//        EHRect rect = [self dirtyPixelRectInContext:context];
-//        MTLScissorRect scissor = (MTLScissorRect) {(NSUInteger)rect.origin.x, (NSUInteger)rect.origin.y, (NSUInteger)rect.size.width, (NSUInteger)rect.size.height};
-//        [renderEncoder setScissorRect:scissor];
-//    }
+    
     // Draw the triangles.
     [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                       vertexStart:0

@@ -15,6 +15,7 @@
 @property (nonatomic, assign) EHRect targetRect;
 @property (nonatomic, strong) id<CAMetalDrawable> canvas;
 @property (nonatomic, strong) id<MTLRenderCommandEncoder> encoder;
+@property (nonatomic, strong) id<MTLCommandBuffer> commandBuffer;
 
 @end
 
@@ -22,13 +23,14 @@
 
 @dynamic targetRectInPixel;
 
-- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(nonnull id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect
+- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(nonnull id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect commandBuffer:(nonnull id<MTLCommandBuffer>)commandBuffer
 {
     self = [super init];
     if (self) {
         _canvas = canvas;
         _encoder = encoder;
         _targetRect = targetRect;
+        _commandBuffer = commandBuffer;
     }
     return self;
 }
@@ -45,14 +47,18 @@
 
 - (id)copy
 {
-    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:self.targetRect];
+    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:self.targetRect commandBuffer:self.commandBuffer];
     return copy;
 }
 
 - (instancetype)copyWithTargetRect:(EHRect)targetRect
 {
-    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:targetRect];
+    EHRenderContext *copy = [[EHRenderContext alloc] initWithCanvas:self.canvas encoder:self.encoder targetRect:targetRect commandBuffer:self.commandBuffer];
     return copy;
+}
+
+- (nonnull id)copyWithZone:(nullable NSZone *)zone {
+    return [self copy];
 }
 
 @end
@@ -63,6 +69,7 @@
 @property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
 @property (nonatomic, strong) id<MTLCommandQueue> commandQueue;
 @property (nonatomic, strong) CADisplayLink *ticker;
+@property (nonatomic, strong) dispatch_semaphore_t frameBoundary;
 
 @property (nonatomic, assign) BOOL ready;
 @property (nonatomic, assign) double nativeScale;
@@ -94,6 +101,7 @@ static EHRenderEngine *singleton;
 //        [_ticker addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         _ready = NO;
         _nativeScale = UIScreen.mainScreen.nativeScale;
+        _frameBoundary = dispatch_semaphore_create(1);
     }
     return self;
 }
@@ -121,14 +129,31 @@ static EHRenderEngine *singleton;
     if (!commandBuffer) {
         return;
     }
+    
+    dispatch_semaphore_wait(self.frameBoundary, DISPATCH_TIME_FOREVER);
+    
+    __weak dispatch_semaphore_t semaphore = self.frameBoundary;
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> _Nonnull cb) {
+        dispatch_semaphore_signal(semaphore);
+    }];
+    
     EHRect rect = (EHRect) {self.layer.bounds.origin.x, self.layer.bounds.origin.y, self.layer.bounds.size.width, self.layer.bounds.size.height};
     MTLRenderPassDescriptor *renderPass = [MTLRenderPassDescriptor renderPassDescriptor];
     renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
     renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1);
     renderPass.colorAttachments[0].texture = drawable.texture;
-//    renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+    renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+    
+//    MTLRenderPassStencilAttachmentDescriptor *stencilAttachment = [[MTLRenderPassStencilAttachmentDescriptor alloc] init];
+//    stencilAttachment.texture = drawable.texture;
+//    stencilAttachment.clearStencil = 0;
+//    stencilAttachment.loadAction = MTLLoadActionClear;
+//    stencilAttachment.storeAction = MTLStoreActionStore;
+//    
+//    renderPass.stencilAttachment = stencilAttachment;
+    
     id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass];
-    EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect];
+    EHRenderContext *context = [[EHRenderContext alloc] initWithCanvas:drawable encoder:encoder targetRect:rect commandBuffer:commandBuffer];
     
     @autoreleasepool {
         [self.delegate renderInContext:context];

@@ -15,13 +15,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface EHRenderContext : NSObject<NSCopying>
 
-@property (nonatomic, assign, readonly) EHRect targetRect;
-@property (nonatomic, assign, readonly) EHRect targetRectInPixel;
 @property (nonatomic, strong, readonly) id<CAMetalDrawable> canvas;
 @property (nonatomic, strong, readonly) id<MTLRenderCommandEncoder> encoder;
+@property (nonatomic, strong, readonly) id<MTLCommandBuffer> commandBuffer;
+
+@property (nonatomic, assign, readonly) EHRect targetRect;
+@property (nonatomic, assign, readonly) EHRect targetRectInPixel;
 @property (nonatomic, assign, readonly) double nativeScale;
 
-- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect;
+- (instancetype)initWithCanvas:(id<CAMetalDrawable>)canvas encoder:(id<MTLRenderCommandEncoder>)encoder targetRect:(EHRect)targetRect commandBuffer:(id<MTLCommandBuffer>)commandBuffer;
 
 - (instancetype)copyWithTargetRect:(EHRect)targetRect;
 

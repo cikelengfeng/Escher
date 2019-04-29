@@ -13,13 +13,82 @@
 #import "ft2build.h"
 #import FT_FREETYPE_H
 
+@interface EHGlyphCacheEntry : NSObject
+
+@property (nonatomic, assign) FT_F26Dot6 charCode;
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, id<MTLTexture>> *map;
+
+@end
+
+@implementation EHGlyphCacheEntry
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _map = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void)setTexture:(id<MTLTexture>)texture forSize:(FT_F26Dot6)size
+{
+    self.map[@(size)] = texture;
+}
+
+- (id<MTLTexture>)textureForSize:(FT_F26Dot6)size
+{
+    return self.map[@(size)];
+}
+
+@end
+
+@interface EHGlyphCache : NSObject
+
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, EHGlyphCacheEntry *> *map;
+
+- (id<MTLTexture>)textureForChar:(char)c size:(FT_F26Dot6)size;
+
+@end
+
+@implementation EHGlyphCache
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _map = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void)addTexture:(id<MTLTexture>)txtr forChar:(char)c size:(FT_F26Dot6)size
+{
+    EHGlyphCacheEntry *entry = self.map[@(c)];
+    if (!entry) {
+        entry = [[EHGlyphCacheEntry alloc] init];
+        self.map[@(c)] = entry;
+    }
+    [entry setTexture:txtr forSize:size];
+}
+
+- (id<MTLTexture>)textureForChar:(char)c size:(FT_F26Dot6)size
+{
+    EHGlyphCacheEntry *entry = self.map[@(c)];
+    if (!entry) {
+        return nil;
+    }
+    return [entry textureForSize:size];
+}
+
+@end
+
 @interface EHTextRenderBox ()
 
 @property (nonatomic, strong) id<MTLRenderPipelineState> pipelineState;
-//@property (nonatomic, strong) id<MTLTexture> texture;
-//@property (nonatomic, strong) id<MTLBuffer> vertices;
-//@property (nonatomic, assign) int verticesCount;
 @property (nonatomic, assign) FT_Face face;
+
+@property (nonatomic, strong) EHGlyphCache *cache;
 
 @end
 
@@ -47,6 +116,7 @@
         _pipelineState = [[EHRenderEngine sharedInstance].device newRenderPipelineStateWithDescriptor:pipelineStateDesc error:&error];
         
         _textColor = EHColorMake(0, 0, 0, 255);
+        _fontSize = 12;
         
         FT_Library ft_lib = {NULL};
         if (FT_Init_FreeType(&ft_lib) != 0) {
@@ -61,6 +131,7 @@
             return nil;
         }
         _face = face;
+        _cache = [[EHGlyphCache alloc] init];
     }
     return self;
 }
@@ -111,7 +182,8 @@
     double y = 0;
     double baseline = 0;
     double scale = [EHRenderEngine sharedInstance].nativeScale;
-    FT_Set_Char_Size(self.face, 0, 0, 768*scale, 1136*scale);
+    FT_UInt fontSize = (unsigned int)(self.fontSize * scale);
+    FT_Set_Pixel_Sizes(self.face, fontSize, 0);
     
     for (int i = 0; i < length; i++) {
         char c = utf8str[i];
@@ -127,7 +199,12 @@
         }
         MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatR8Unorm width:glyphWidth height:glyphHeight mipmapped:NO];
         desc.usage = MTLTextureUsageShaderRead;
-        id<MTLTexture> texture = [[EHRenderEngine sharedInstance].device newTextureWithDescriptor:desc];
+        id<MTLTexture> texture = [self.cache textureForChar:c size:fontSize];
+        if (!texture) {
+            texture = [[EHRenderEngine sharedInstance].device newTextureWithDescriptor:desc];
+            [self.cache addTexture:texture forChar:c size:fontSize];
+        }
+        
         MTLRegion region = {
             { 0, 0, 0 },                   // MTLOrigin
             {desc.width, desc.height, 1} // MTLSize
